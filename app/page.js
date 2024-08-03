@@ -2,17 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { firestore } from "../firebase";
-import { collection, query, getDocs, addDoc } from "firebase/firestore";
+import { collection, query, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+
+interface InventoryItem {
+  id: string;
+  name: string;
+  quantity: string;
+}
 
 export default function Home() {
-  const [inventory, setInventory] = useState([]);
-  const [itemName, setItemName] = useState("");
-  const [itemQuantity, setItemQuantity] = useState("");
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [itemName, setItemName] = useState<string>("");
+  const [itemQuantity, setItemQuantity] = useState<string>("");
 
   const updateInventory = async () => {
     const q = query(collection(firestore, "inventory"));
     const snapshot = await getDocs(q);
-    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as InventoryItem[];
     setInventory(items);
   };
 
@@ -26,6 +32,11 @@ export default function Home() {
       setItemQuantity("");
       updateInventory();
     }
+  };
+
+  const deleteItem = async (id: string) => {
+    await deleteDoc(doc(firestore, "inventory", id));
+    updateInventory();
   };
 
   useEffect(() => {
@@ -63,8 +74,14 @@ export default function Home() {
         ) : (
           <ul className="list-disc pl-5">
             {inventory.map((item) => (
-              <li key={item.id} className="mb-2">
-                {item.name} - {item.quantity}
+              <li key={item.id} className="mb-2 flex justify-between">
+                <span>{item.name} - {item.quantity}</span>
+                <button
+                  onClick={() => deleteItem(item.id)}
+                  className="bg-red-500 text-white p-1 rounded"
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
