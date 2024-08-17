@@ -1,1 +1,1 @@
-# inventory_management
+Welcome to my Pantry Tracker App! 
